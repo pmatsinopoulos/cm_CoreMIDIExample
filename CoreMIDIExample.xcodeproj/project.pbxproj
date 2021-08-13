@@ -8,6 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		E52DFBF926C4E484005040BA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = E52DFBF826C4E484005040BA /* main.m */; };
+		E52DFC0126C4E546005040BA /* CheckError.m in Sources */ = {isa = PBXBuildFile; fileRef = E52DFC0026C4E546005040BA /* CheckError.m */; };
+		E52DFC0626C4E693005040BA /* BuildAudioComponentDescriptionForDefaultOutput.m in Sources */ = {isa = PBXBuildFile; fileRef = E52DFC0526C4E693005040BA /* BuildAudioComponentDescriptionForDefaultOutput.m */; };
+		E52DFC0926C4E6DB005040BA /* FindAudioComponent.c in Sources */ = {isa = PBXBuildFile; fileRef = E52DFC0826C4E6DB005040BA /* FindAudioComponent.c */; };
+		E52DFC0C26C4E7B7005040BA /* BuildAudioComponentDescriptionForDLSSynth.m in Sources */ = {isa = PBXBuildFile; fileRef = E52DFC0B26C4E7B7005040BA /* BuildAudioComponentDescriptionForDLSSynth.m */; };
+		E5F4641B26C635330000528E /* NSPrint.m in Sources */ = {isa = PBXBuildFile; fileRef = E5F4641A26C635330000528E /* NSPrint.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +30,17 @@
 /* Begin PBXFileReference section */
 		E52DFBF526C4E484005040BA /* CoreMIDIExample */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CoreMIDIExample; sourceTree = BUILT_PRODUCTS_DIR; };
 		E52DFBF826C4E484005040BA /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		E52DFC0026C4E546005040BA /* CheckError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CheckError.m; sourceTree = "<group>"; };
+		E52DFC0226C4E553005040BA /* CheckError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CheckError.h; sourceTree = "<group>"; };
+		E52DFC0326C4E624005040BA /* AppState.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppState.h; sourceTree = "<group>"; };
+		E52DFC0526C4E693005040BA /* BuildAudioComponentDescriptionForDefaultOutput.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BuildAudioComponentDescriptionForDefaultOutput.m; sourceTree = "<group>"; };
+		E52DFC0726C4E69D005040BA /* BuildAudioComponentDescriptionForDefaultOutput.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BuildAudioComponentDescriptionForDefaultOutput.h; sourceTree = "<group>"; };
+		E52DFC0826C4E6DB005040BA /* FindAudioComponent.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FindAudioComponent.c; sourceTree = "<group>"; };
+		E52DFC0A26C4E6E3005040BA /* FindAudioComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FindAudioComponent.h; sourceTree = "<group>"; };
+		E52DFC0B26C4E7B7005040BA /* BuildAudioComponentDescriptionForDLSSynth.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BuildAudioComponentDescriptionForDLSSynth.m; sourceTree = "<group>"; };
+		E52DFC0D26C4E7F8005040BA /* BuildAudioComponentDescriptionForDLSSynth.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BuildAudioComponentDescriptionForDLSSynth.h; sourceTree = "<group>"; };
+		E5F4641926C635330000528E /* NSPrint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSPrint.h; sourceTree = "<group>"; };
+		E5F4641A26C635330000528E /* NSPrint.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSPrint.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,9 +73,36 @@
 		E52DFBF726C4E484005040BA /* CoreMIDIExample */ = {
 			isa = PBXGroup;
 			children = (
+				E52DFC0426C4E65E005040BA /* AudioUtils */,
+				E52DFBFF26C4E4D3005040BA /* Utils */,
 				E52DFBF826C4E484005040BA /* main.m */,
+				E52DFC0326C4E624005040BA /* AppState.h */,
 			);
 			path = CoreMIDIExample;
+			sourceTree = "<group>";
+		};
+		E52DFBFF26C4E4D3005040BA /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				E5F4641926C635330000528E /* NSPrint.h */,
+				E5F4641A26C635330000528E /* NSPrint.m */,
+				E52DFC0226C4E553005040BA /* CheckError.h */,
+				E52DFC0026C4E546005040BA /* CheckError.m */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		E52DFC0426C4E65E005040BA /* AudioUtils */ = {
+			isa = PBXGroup;
+			children = (
+				E52DFC0A26C4E6E3005040BA /* FindAudioComponent.h */,
+				E52DFC0826C4E6DB005040BA /* FindAudioComponent.c */,
+				E52DFC0726C4E69D005040BA /* BuildAudioComponentDescriptionForDefaultOutput.h */,
+				E52DFC0526C4E693005040BA /* BuildAudioComponentDescriptionForDefaultOutput.m */,
+				E52DFC0B26C4E7B7005040BA /* BuildAudioComponentDescriptionForDLSSynth.m */,
+				E52DFC0D26C4E7F8005040BA /* BuildAudioComponentDescriptionForDLSSynth.h */,
+			);
+			path = AudioUtils;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -118,7 +161,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E52DFC0C26C4E7B7005040BA /* BuildAudioComponentDescriptionForDLSSynth.m in Sources */,
+				E52DFC0626C4E693005040BA /* BuildAudioComponentDescriptionForDefaultOutput.m in Sources */,
+				E5F4641B26C635330000528E /* NSPrint.m in Sources */,
 				E52DFBF926C4E484005040BA /* main.m in Sources */,
+				E52DFC0126C4E546005040BA /* CheckError.m in Sources */,
+				E52DFC0926C4E6DB005040BA /* FindAudioComponent.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
