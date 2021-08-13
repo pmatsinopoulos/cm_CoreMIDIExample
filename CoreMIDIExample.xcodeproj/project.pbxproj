@@ -13,6 +13,7 @@
 		E52DFC0926C4E6DB005040BA /* FindAudioComponent.c in Sources */ = {isa = PBXBuildFile; fileRef = E52DFC0826C4E6DB005040BA /* FindAudioComponent.c */; };
 		E52DFC0C26C4E7B7005040BA /* BuildAudioComponentDescriptionForDLSSynth.m in Sources */ = {isa = PBXBuildFile; fileRef = E52DFC0B26C4E7B7005040BA /* BuildAudioComponentDescriptionForDLSSynth.m */; };
 		E5F4641B26C635330000528E /* NSPrint.m in Sources */ = {isa = PBXBuildFile; fileRef = E5F4641A26C635330000528E /* NSPrint.m */; };
+		E5F4642026C64FC70000528E /* BuildAudioComponentDescriptionForReverb.m in Sources */ = {isa = PBXBuildFile; fileRef = E5F4641F26C64FC70000528E /* BuildAudioComponentDescriptionForReverb.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -41,6 +42,8 @@
 		E52DFC0D26C4E7F8005040BA /* BuildAudioComponentDescriptionForDLSSynth.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BuildAudioComponentDescriptionForDLSSynth.h; sourceTree = "<group>"; };
 		E5F4641926C635330000528E /* NSPrint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSPrint.h; sourceTree = "<group>"; };
 		E5F4641A26C635330000528E /* NSPrint.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSPrint.m; sourceTree = "<group>"; };
+		E5F4641F26C64FC70000528E /* BuildAudioComponentDescriptionForReverb.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BuildAudioComponentDescriptionForReverb.m; sourceTree = "<group>"; };
+		E5F4642126C64FDD0000528E /* BuildAudioComponentDescriptionForReverb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BuildAudioComponentDescriptionForReverb.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -101,6 +104,8 @@
 				E52DFC0526C4E693005040BA /* BuildAudioComponentDescriptionForDefaultOutput.m */,
 				E52DFC0B26C4E7B7005040BA /* BuildAudioComponentDescriptionForDLSSynth.m */,
 				E52DFC0D26C4E7F8005040BA /* BuildAudioComponentDescriptionForDLSSynth.h */,
+				E5F4641F26C64FC70000528E /* BuildAudioComponentDescriptionForReverb.m */,
+				E5F4642126C64FDD0000528E /* BuildAudioComponentDescriptionForReverb.h */,
 			);
 			path = AudioUtils;
 			sourceTree = "<group>";
@@ -162,6 +167,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E52DFC0C26C4E7B7005040BA /* BuildAudioComponentDescriptionForDLSSynth.m in Sources */,
+				E5F4642026C64FC70000528E /* BuildAudioComponentDescriptionForReverb.m in Sources */,
 				E52DFC0626C4E693005040BA /* BuildAudioComponentDescriptionForDefaultOutput.m in Sources */,
 				E5F4641B26C635330000528E /* NSPrint.m in Sources */,
 				E52DFBF926C4E484005040BA /* main.m in Sources */,

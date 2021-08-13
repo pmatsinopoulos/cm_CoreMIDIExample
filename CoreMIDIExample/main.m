@@ -14,6 +14,7 @@
 #import "BuildAudioComponentDescriptionForDefaultOutput.h"
 #import "FindAudioComponent.h"
 #import "BuildAudioComponentDescriptionForDLSSynth.h"
+#import "BuildAudioComponentDescriptionForReverb.h"
 
 #define NOTE_ON  0x09
 #define NOTE_OFF 0x08
@@ -54,19 +55,37 @@ AudioUnit SetUpDLSSynthAudioUnit(void) {
   return dlsSynthAudioUnit;
 }
 
-void ConnectUnitsTogether(AudioUnit dlsSynthAudioUnit, AudioUnit defaultOutputAudioUnit) {
+AudioUnit SetUpReverbAudioUnit(void) {
+  AudioComponentDescription reverbDescription = {0};
+  
+  BuildAudioComponentDescriptionForReverb(&reverbDescription);
+    
+  AudioComponent reverbAudioComponent = FindAudioComponent(reverbDescription);
+    
+  AudioUnit reverbAudioUnit;
+    
+  CheckError(AudioComponentInstanceNew(reverbAudioComponent,
+                                       &reverbAudioUnit),
+             "Instantiating the Reverb Audio Unit");
+  
+  CheckError(AudioUnitInitialize(reverbAudioUnit), "Initializing the reverbAudioUnit");
+
+  return reverbAudioUnit;
+}
+
+void ConnectUnitsTogether(AudioUnit sourceAudioUnit, AudioUnit destinationAudioUnit) {
   AudioUnitConnection connection;
   connection.destInputNumber = 0;
-  connection.sourceAudioUnit = dlsSynthAudioUnit;
+  connection.sourceAudioUnit = sourceAudioUnit;
   connection.sourceOutputNumber = 0;
   
-  CheckError(AudioUnitSetProperty(defaultOutputAudioUnit,
+  CheckError(AudioUnitSetProperty(destinationAudioUnit,
                                   kAudioUnitProperty_MakeConnection,
                                   kAudioUnitScope_Input,
                                   0,
                                   &connection,
                                   sizeof(AudioUnitConnection)),
-             "connecting dls synth audio unit to default output unit");
+             "connecting source audio unit to destination audio unit");
 }
 
 void StartDefaultOutputUnit(AudioUnit defaultOutputAudioUnit) {
@@ -75,20 +94,22 @@ void StartDefaultOutputUnit(AudioUnit defaultOutputAudioUnit) {
              "Starting the Output Audio Unit");
 }
 
+void ReleaseAudioUnit(AudioUnit inAudioUnit) {
+  CheckError(AudioUnitUninitialize(inAudioUnit), "Uninitializing the Audio Unit");
+  CheckError(AudioComponentInstanceDispose(inAudioUnit), "Disposing the Audio Unit");
+}
+
 void StopAudioOutputUnit(AudioUnit inAudioUnit) {
   CheckError(AudioOutputUnitStop(inAudioUnit), "Stopping the Output Audio Unit");
-  CheckError(AudioUnitUninitialize(inAudioUnit), "Uninitializing the Output Audio Unit");
-  CheckError(AudioComponentInstanceDispose(inAudioUnit), "Disposing the Output Audio Unit");
+  ReleaseAudioUnit(inAudioUnit);
 }
 
-void StopDLSSynthAudioUnit(AudioUnit dlsSynthAudioUnit) {
-  CheckError(AudioUnitUninitialize(dlsSynthAudioUnit), "Uninitializing the DLSSynth Audio Unit");
-  CheckError(AudioComponentInstanceDispose(dlsSynthAudioUnit), "Disposing the DLSSynth Audio Unit");
-}
-
-void ReleaseResources(AudioUnit defaultOutputAudioUnit, AudioUnit dlsSynthAudioUnit) {
+void ReleaseResources(AudioUnit defaultOutputAudioUnit,
+                      AudioUnit reverbAudioUnit,
+                      AudioUnit dlsSynthAudioUnit) {
   StopAudioOutputUnit(defaultOutputAudioUnit);
-  StopDLSSynthAudioUnit(dlsSynthAudioUnit);
+  ReleaseAudioUnit(reverbAudioUnit);
+  ReleaseAudioUnit(dlsSynthAudioUnit);
 }
 
 //void MIDIStateChangesNotify(const MIDINotification *message, void *refCon) {
@@ -172,15 +193,11 @@ void SetupMIDI(AppState *appState) {
   }
   
   NSLog(@"Number of sources found %lu", numberOfSources);
-  // TODO: Maybe create a dictionary of objects. The key can be the string version of the
-  // index and the value can be an object with 2 members: the MIDIEndpointRef and the Name
-  // This should be a Mutable Dictionary
   MIDIEndpointRef *sources = malloc(numberOfSources * sizeof(MIDIEndpointRef));
   
   for (ItemCount i = 0; i < numberOfSources; i++) {
     sources[i] = MIDIGetSource(i);
     
-    // TODO: Use NSStrings maybe? So, I will not have to release things?
     CFStringRef name;
     
     CheckError(MIDIObjectGetStringProperty(sources[i],
@@ -221,7 +238,11 @@ int main(int argc, const char * argv[]) {
     
     appState.dlsSynthAudioUnit = SetUpDLSSynthAudioUnit();
     
-    ConnectUnitsTogether(appState.dlsSynthAudioUnit, defaultOutputAudioUnit);
+    AudioUnit reverbAudioUnit = SetUpReverbAudioUnit();
+    
+    ConnectUnitsTogether(appState.dlsSynthAudioUnit, reverbAudioUnit);
+    
+    ConnectUnitsTogether(reverbAudioUnit, defaultOutputAudioUnit);
     
     SetupMIDI(&appState);
     
@@ -233,7 +254,9 @@ int main(int argc, const char * argv[]) {
 //      CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.1, false);
 //    }
     
-    ReleaseResources(defaultOutputAudioUnit, appState.dlsSynthAudioUnit);
+    ReleaseResources(defaultOutputAudioUnit,
+                     reverbAudioUnit,
+                     appState.dlsSynthAudioUnit);
     
     NSPrint(@"Bye\n");
   }
