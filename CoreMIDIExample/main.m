@@ -169,6 +169,65 @@ void MIDIReadNotify(const MIDIPacketList *pktlist, void *readProcRefCon, void *s
   }
 }
 
+ItemCount GetNumberOfMIDISources(void) {
+  ItemCount numberOfSources = MIDIGetNumberOfSources();
+  if (numberOfSources == 0) {
+    NSLog(@"Can't find any MIDI Sources! Are you sure you have them connected to your host system?");
+    exit(1);
+  }
+  return numberOfSources;
+}
+
+void CreateMIDISourceReferences(MIDIEndpointRef **oSources, ItemCount *oNumberOfSources) {
+  *oNumberOfSources = GetNumberOfMIDISources();
+  
+  NSLog(@"Number of sources found %lu", *oNumberOfSources);
+
+  *oSources = malloc(*oNumberOfSources * sizeof(MIDIEndpointRef));
+  
+  for (ItemCount i = 0; i < *oNumberOfSources; i++) {
+    (*oSources)[i] = MIDIGetSource(i);
+    
+    CFStringRef name;
+    
+    CheckError(MIDIObjectGetStringProperty((*oSources)[i],
+                                           kMIDIPropertyName,
+                                           &name),
+               "Getting the name of the source");
+    
+    NSLog(@"MIDI Source %@, with index: %lu", name, i + 1);
+            
+    CFRelease(name);
+  }
+}
+
+void ReleaseMIDISourceReferences(MIDIEndpointRef **sources) {
+  free(*sources);
+  *sources = NULL;
+}
+
+ItemCount AskUserWhichMIDISource(ItemCount numberOfSources) {
+  printf("Which source to you want to connect to? [1-%lu] :", numberOfSources);
+  ItemCount sourceIndex = -1;
+  scanf("%lu", &sourceIndex);
+  fflush(stdin);
+  if (sourceIndex < 1 || sourceIndex > numberOfSources) {
+    fprintf(stderr, "Cannot connect this source: %lu\n", sourceIndex);
+    exit(1);
+  }
+  printf("Will connect source %lu\n", sourceIndex);
+
+  return sourceIndex;
+}
+
+void ConnectToMIDISource(MIDIEndpointRef *sources, ItemCount sourceIndex, MIDIPortRef port) {
+  MIDIEndpointRef source = sources[sourceIndex - 1];
+  CheckError(MIDIPortConnectSource(port,
+                                   source,
+                                   NULL),
+             "Connecting port to source");
+}
+
 void SetupMIDI(AppState *appState) {
   MIDIClientRef client;
   CheckError(MIDIClientCreate(CFSTR("Core MIDI Example"),
@@ -186,48 +245,16 @@ void SetupMIDI(AppState *appState) {
                                  &inPort),
              "Creating MIDI Input Port");
   
-  ItemCount numberOfSources = MIDIGetNumberOfSources();
-  if (numberOfSources == 0) {
-    NSLog(@"Can't find any MIDI Sources! Are you sure you have them connected to your host system?");
-    exit(1);
-  }
+  MIDIEndpointRef *sources = NULL;
+  ItemCount numberOfSources = 0;
   
-  NSLog(@"Number of sources found %lu", numberOfSources);
-  MIDIEndpointRef *sources = malloc(numberOfSources * sizeof(MIDIEndpointRef));
+  CreateMIDISourceReferences(&sources, &numberOfSources);
   
-  for (ItemCount i = 0; i < numberOfSources; i++) {
-    sources[i] = MIDIGetSource(i);
+  ItemCount sourceIndex = AskUserWhichMIDISource(numberOfSources);
     
-    CFStringRef name;
-    
-    CheckError(MIDIObjectGetStringProperty(sources[i],
-                                           kMIDIPropertyName,
-                                           &name),
-               "Getting the name of the source");
-    
-    NSLog(@"MIDI Source %@, with index: %lu", name, i + 1);
-            
-    CFRelease(name);
-  }
+  ConnectToMIDISource(sources, sourceIndex, inPort);
   
-  printf("Which source to you want to connect to? [1-%lu] :", numberOfSources);
-  ItemCount sourceIndex = -1;
-  scanf("%lu", &sourceIndex);
-  fflush(stdin);
-  if (sourceIndex < 1 || sourceIndex > numberOfSources) {
-    fprintf(stderr, "Cannot connect this source: %lu\n", sourceIndex);
-    exit(1);
-  }
-  printf("Will connect source %lu\n", sourceIndex);
-  
-  MIDIEndpointRef source = sources[sourceIndex - 1];
-  CheckError(MIDIPortConnectSource(inPort,
-                                   source,
-                                   NULL),
-             "Connecting port to source");
-  
-  free(sources);
-  sources = NULL;
+  ReleaseMIDISourceReferences(&sources);
 }
 
 int main(int argc, const char * argv[]) {
