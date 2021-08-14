@@ -263,9 +263,9 @@ int main(int argc, const char * argv[]) {
     
     AudioUnit defaultOutputAudioUnit = SetUpDefaultOutputAudioUnit();
     
-    appState.dlsSynthAudioUnit = SetUpDLSSynthAudioUnit();
-    
     AudioUnit reverbAudioUnit = SetUpReverbAudioUnit();
+
+    appState.dlsSynthAudioUnit = SetUpDLSSynthAudioUnit();
     
     ConnectUnitsTogether(appState.dlsSynthAudioUnit, reverbAudioUnit);
     
