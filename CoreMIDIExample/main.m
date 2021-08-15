@@ -181,7 +181,7 @@ ItemCount GetNumberOfMIDISources(void) {
 void CreateMIDISourceReferences(MIDIEndpointRef **oSources, ItemCount *oNumberOfSources) {
   *oNumberOfSources = GetNumberOfMIDISources();
   
-  NSLog(@"Number of sources found %lu", *oNumberOfSources);
+  NSPrint(@"Number of sources found %lu\n", *oNumberOfSources);
 
   *oSources = malloc(*oNumberOfSources * sizeof(MIDIEndpointRef));
   
@@ -195,7 +195,7 @@ void CreateMIDISourceReferences(MIDIEndpointRef **oSources, ItemCount *oNumberOf
                                            &name),
                "Getting the name of the source");
     
-    NSLog(@"MIDI Source %@, with index: %lu", name, i + 1);
+    NSPrint(@"MIDI Source: %@, with index: %lu\n", name, i + 1);
             
     CFRelease(name);
   }
@@ -207,7 +207,7 @@ void ReleaseMIDISourceReferences(MIDIEndpointRef **sources) {
 }
 
 ItemCount AskUserWhichMIDISource(ItemCount numberOfSources) {
-  printf("Which source to you want to connect to? [1-%lu] :", numberOfSources);
+  NSPrint(@"Which source to you want to connect to? [1-%lu] :", numberOfSources);
   ItemCount sourceIndex = -1;
   scanf("%lu", &sourceIndex);
   fflush(stdin);
@@ -215,7 +215,7 @@ ItemCount AskUserWhichMIDISource(ItemCount numberOfSources) {
     fprintf(stderr, "Cannot connect this source: %lu\n", sourceIndex);
     exit(1);
   }
-  printf("Will connect source %lu\n", sourceIndex);
+  NSPrint(@"Will connect source %lu\n", sourceIndex);
 
   return sourceIndex;
 }
@@ -285,7 +285,7 @@ int main(int argc, const char * argv[]) {
                      reverbAudioUnit,
                      appState.dlsSynthAudioUnit);
     
-    NSPrint(@"Bye\n");
+    NSPrint(@"Bye!\n");
   }
   return 0;
 }
