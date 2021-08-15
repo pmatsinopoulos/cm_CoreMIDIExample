@@ -178,19 +178,17 @@ ItemCount GetNumberOfMIDISources(void) {
   return numberOfSources;
 }
 
-void CreateMIDISourceReferences(MIDIEndpointRef **oSources, ItemCount *oNumberOfSources) {
+void ListMIDISources(ItemCount *oNumberOfSources) {
   *oNumberOfSources = GetNumberOfMIDISources();
   
   NSPrint(@"Number of sources found %lu\n", *oNumberOfSources);
-
-  *oSources = malloc(*oNumberOfSources * sizeof(MIDIEndpointRef));
   
   for (ItemCount i = 0; i < *oNumberOfSources; i++) {
-    (*oSources)[i] = MIDIGetSource(i);
+    MIDIEndpointRef source = MIDIGetSource(i);
     
     CFStringRef name;
     
-    CheckError(MIDIObjectGetStringProperty((*oSources)[i],
+    CheckError(MIDIObjectGetStringProperty(source,
                                            kMIDIPropertyName,
                                            &name),
                "Getting the name of the source");
@@ -199,11 +197,6 @@ void CreateMIDISourceReferences(MIDIEndpointRef **oSources, ItemCount *oNumberOf
             
     CFRelease(name);
   }
-}
-
-void ReleaseMIDISourceReferences(MIDIEndpointRef **sources) {
-  free(*sources);
-  *sources = NULL;
 }
 
 ItemCount AskUserWhichMIDISource(ItemCount numberOfSources) {
@@ -220,8 +213,8 @@ ItemCount AskUserWhichMIDISource(ItemCount numberOfSources) {
   return sourceIndex;
 }
 
-void ConnectToMIDISource(MIDIEndpointRef *sources, ItemCount sourceIndex, MIDIPortRef port) {
-  MIDIEndpointRef source = sources[sourceIndex - 1];
+void ConnectToMIDISource(ItemCount sourceIndex, MIDIPortRef port) {
+  MIDIEndpointRef source = MIDIGetSource(sourceIndex - 1);
   CheckError(MIDIPortConnectSource(port,
                                    source,
                                    NULL),
@@ -245,16 +238,13 @@ void SetupMIDI(AppState *appState) {
                                  &inPort),
              "Creating MIDI Input Port");
   
-  MIDIEndpointRef *sources = NULL;
   ItemCount numberOfSources = 0;
   
-  CreateMIDISourceReferences(&sources, &numberOfSources);
+  ListMIDISources(&numberOfSources);
   
   ItemCount sourceIndex = AskUserWhichMIDISource(numberOfSources);
     
-  ConnectToMIDISource(sources, sourceIndex, inPort);
-  
-  ReleaseMIDISourceReferences(&sources);
+  ConnectToMIDISource(sourceIndex, inPort);
 }
 
 int main(int argc, const char * argv[]) {
