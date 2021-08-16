@@ -200,7 +200,7 @@ void ListMIDISources(ItemCount *oNumberOfSources) {
 }
 
 ItemCount AskUserWhichMIDISource(ItemCount numberOfSources) {
-  NSPrint(@"Which source to you want to connect to? [1-%lu] :", numberOfSources);
+  NSPrint(@"Which source do you want to connect to? [1-%lu] :", numberOfSources);
   ItemCount sourceIndex = -1;
   scanf("%lu", &sourceIndex);
   fflush(stdin);
