@@ -199,6 +199,46 @@ void ConnectToMIDISource(AppState *appState, ItemCount sourceIndex, MIDIPortRef 
              "Connecting port to source");
 }
 
+void ProcessEvent(const MIDIEventList *evtlist, void *srcConnRefCon) {
+  AppState *appState = (AppState *)srcConnRefCon;
+  MIDIEventPacket *packet = (MIDIEventPacket*)evtlist->packet;
+
+  while(packet && packet->wordCount) {
+    Byte messageType = (packet->words[0] & 0xF0000000) >> 28;
+    if (messageType == 0x02) { // MIDI 1.0 Voice Channel Message
+      // We work with the first word only for MIDI 1.0 Voice Channel Messages
+      Byte status = (Byte)((packet->words[0] & 0x00FF0000) >> 16);
+      Byte midiCommand = status >> 4; // the command is the 4 left-most bits
+      Byte midiChannel = status & 0x0F; // the channel is the 4 right-most bits
+      NSLog(@"status %x, command %d, channel %d", status, midiCommand, midiChannel);
+      
+      if (midiCommand == NOTE_ON || midiCommand == NOTE_OFF) {
+        Byte note = (Byte)((packet->words[0] & 0x00007F00) >> 8);
+        Byte velocity = (Byte)(packet->words[0] & 0x0000007F);
+
+        NSLog(@"Note: %u, velocity: %u", note, velocity);
+        CheckError(MusicDeviceMIDIEvent(appState->dlsSynthAudioUnit, status, note, velocity, 0),
+                   "Sending event to DLS synth unit");
+      }
+    }
+    packet = MIDIEventPacketNext(packet);
+  }
+}
+
+MIDIPortRef CreateMIDIInputPort(MIDIClientRef client) {
+  MIDIReceiveBlock receiveBlock = ^void (const MIDIEventList *evtlist, void *srcConnRefCon) {
+    ProcessEvent(evtlist, srcConnRefCon);
+  };
+  
+  MIDIPortRef inPort;
+  CheckError(MIDIInputPortCreateWithProtocol(client,
+                                             CFSTR("Input Port"),
+                                             kMIDIProtocol_1_0,
+                                             &inPort,
+                                             receiveBlock),
+             "Creating MIDI Input Port");
+  return inPort;
+}
 
 void SetupMIDI(AppState *appState) {
   MIDIClientRef client;
@@ -209,45 +249,8 @@ void SetupMIDI(AppState *appState) {
                               &client),
              "Creating MIDI Client Session");
   
-  MIDIPortRef inPort;
-    
-  MIDIReceiveBlock receiveBlock = ^void (const MIDIEventList *evtlist, void *srcConnRefCon) {
-    NSLog(@"Number of packets %u", evtlist->numPackets);
-    
-    AppState *appState = (AppState *)srcConnRefCon;
-    MIDIEventPacket *packet = (MIDIEventPacket*)evtlist->packet;
-
-    while(packet && packet->wordCount) {
-      Byte messageType = (packet->words[0] & 0xF0000000) >> 28;
-      if (messageType == 0x02) { // MIDI 1.0 Voice Channel Message
-        // We work with the first word only for MIDI 1.0 Voice Channel Messages
-        Byte status = (Byte)((packet->words[0] & 0x00FF0000) >> 16);
-        NSLog(@"status %x", status);
+  MIDIPortRef inPort = CreateMIDIInputPort(client);
         
-        Byte midiCommand = status >> 4; // the command is the 4 left-most bits
-        Byte midiChannel = status & 0x0F; // the channel is the 4 right-most bits
-        NSLog(@"command %d, channel %d", midiCommand, midiChannel);
-        
-        if (midiCommand == NOTE_ON || midiCommand == NOTE_OFF) {
-          Byte note = (Byte)((packet->words[0] & 0x00007F00) >> 8);
-          Byte velocity = (Byte)(packet->words[0] & 0x0000007F);
-
-          NSLog(@"Note: %u, velocity: %u", note, velocity);
-          CheckError(MusicDeviceMIDIEvent(appState->dlsSynthAudioUnit, status, note, velocity, 0),
-                     "Sending event to DLS synth unit");
-        }
-      }
-      packet = MIDIEventPacketNext(packet);
-    }
-  };
-  
-  CheckError(MIDIInputPortCreateWithProtocol(client,
-                                             CFSTR("Input Port"),
-                                             kMIDIProtocol_1_0,
-                                             &inPort,
-                                             receiveBlock),
-             "Creating MIDI Input Port");
-    
   ItemCount numberOfSources = 0;
   
   ListMIDISources(&numberOfSources);
