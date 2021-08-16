@@ -11,7 +11,10 @@
 #import <AudioToolbox/AudioToolbox.h>
 
 typedef struct AppState {
-  AudioUnit dlsSynthAudioUnit;  
+  AudioUnit dlsSynthAudioUnit;
+  MIDIClientRef client;
+  MIDIPortRef inPort;
+  MIDIEndpointRef source;
 } AppState;
 
 #endif /* AppState_h */

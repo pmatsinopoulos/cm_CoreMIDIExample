@@ -104,9 +104,16 @@ void StopAudioOutputUnit(AudioUnit inAudioUnit) {
   ReleaseAudioUnit(inAudioUnit);
 }
 
-void ReleaseResources(AudioUnit defaultOutputAudioUnit,
+void ReleaseResources(AppState *appState,
+                      AudioUnit defaultOutputAudioUnit,
                       AudioUnit reverbAudioUnit,
                       AudioUnit dlsSynthAudioUnit) {
+  CheckError(MIDIPortDisconnectSource(appState->inPort, appState->source),
+             "Disconnecting port from source");
+  CheckError(MIDIPortDispose(appState->inPort),
+             "Disposing of the MIDI port");
+  CheckError(MIDIClientDispose(appState->client),
+             "Disposing of the MIDI client");
   StopAudioOutputUnit(defaultOutputAudioUnit);
   ReleaseAudioUnit(reverbAudioUnit);
   ReleaseAudioUnit(dlsSynthAudioUnit);
@@ -191,10 +198,10 @@ ItemCount AskUserWhichMIDISource(ItemCount numberOfSources) {
   return sourceIndex;
 }
 
-void ConnectToMIDISource(AppState *appState, ItemCount sourceIndex, MIDIPortRef port) {
-  MIDIEndpointRef source = MIDIGetSource(sourceIndex - 1);
-  CheckError(MIDIPortConnectSource(port,
-                                   source,
+void ConnectToMIDISource(AppState *appState, ItemCount sourceIndex) {
+  appState->source = MIDIGetSource(sourceIndex - 1);
+  CheckError(MIDIPortConnectSource(appState->inPort,
+                                   appState->source,
                                    appState),
              "Connecting port to source");
 }
@@ -241,15 +248,14 @@ MIDIPortRef CreateMIDIInputPort(MIDIClientRef client) {
 }
 
 void SetupMIDI(AppState *appState) {
-  MIDIClientRef client;
   CheckError(MIDIClientCreate(CFSTR("Core MIDI Example"),
 //                              MIDIStateChangesNotify,
                               NULL,
                               NULL,
-                              &client),
+                              &(appState->client)),
              "Creating MIDI Client Session");
   
-  MIDIPortRef inPort = CreateMIDIInputPort(client);
+  appState->inPort = CreateMIDIInputPort(appState->client);
         
   ItemCount numberOfSources = 0;
   
@@ -257,7 +263,7 @@ void SetupMIDI(AppState *appState) {
   
   ItemCount sourceIndex = AskUserWhichMIDISource(numberOfSources);
     
-  ConnectToMIDISource(appState, sourceIndex, inPort);
+  ConnectToMIDISource(appState, sourceIndex);
 }
 
 int main(int argc, const char * argv[]) {
@@ -284,7 +290,8 @@ int main(int argc, const char * argv[]) {
 //      CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.1, false);
 //    }
     
-    ReleaseResources(defaultOutputAudioUnit,
+    ReleaseResources(&appState,
+                     defaultOutputAudioUnit,
                      reverbAudioUnit,
                      appState.dlsSynthAudioUnit);
     
