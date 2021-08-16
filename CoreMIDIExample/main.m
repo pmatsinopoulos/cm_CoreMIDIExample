@@ -147,28 +147,6 @@ void ReleaseResources(AudioUnit defaultOutputAudioUnit,
 //  NSLog(@"MIDIStateChangesNotify(): message %s", strMessage);
 //}
 
-void MIDIReadNotify(const MIDIPacketList *pktlist, void *readProcRefCon, void *srcConnRefCon) {
-  AppState *appState = (AppState *)readProcRefCon;
-  MIDIPacket *packet = (MIDIPacket *)pktlist->packet;
-  while(packet && packet->length) {
-    Byte *data = packet->data;
-    Byte midiStatus = data[0];
-    Byte midiCommand = midiStatus >> 4; // the command is the 4 left-most bits
-    Byte midiChannel = midiStatus & 0x0F; // the channel is the 4 right-most bits
-    
-    NSLog(@"Channel: %u, Command: %u", midiChannel, midiCommand);
-    
-    if (midiCommand == NOTE_ON || midiCommand == NOTE_OFF) {
-      Byte note = data[1] & 0x7F;
-      Byte velocity = data[2] & 0x7F;
-      NSLog(@"Note: %u, velocity: %u", note, velocity);
-      CheckError(MusicDeviceMIDIEvent(appState->dlsSynthAudioUnit, midiStatus, note, velocity, 0),
-                 "Sending event to DLS synth unit");
-    }
-    packet = MIDIPacketNext(packet);
-  }
-}
-
 ItemCount GetNumberOfMIDISources(void) {
   ItemCount numberOfSources = MIDIGetNumberOfSources();
   if (numberOfSources == 0) {
@@ -213,13 +191,14 @@ ItemCount AskUserWhichMIDISource(ItemCount numberOfSources) {
   return sourceIndex;
 }
 
-void ConnectToMIDISource(ItemCount sourceIndex, MIDIPortRef port) {
+void ConnectToMIDISource(AppState *appState, ItemCount sourceIndex, MIDIPortRef port) {
   MIDIEndpointRef source = MIDIGetSource(sourceIndex - 1);
   CheckError(MIDIPortConnectSource(port,
                                    source,
-                                   NULL),
+                                   appState),
              "Connecting port to source");
 }
+
 
 void SetupMIDI(AppState *appState) {
   MIDIClientRef client;
@@ -231,20 +210,51 @@ void SetupMIDI(AppState *appState) {
              "Creating MIDI Client Session");
   
   MIDIPortRef inPort;
-  CheckError(MIDIInputPortCreate(client,
-                                 CFSTR("Input Port"),
-                                 MIDIReadNotify,
-                                 appState,
-                                 &inPort),
-             "Creating MIDI Input Port");
+    
+  MIDIReceiveBlock receiveBlock = ^void (const MIDIEventList *evtlist, void *srcConnRefCon) {
+    NSLog(@"Number of packets %u", evtlist->numPackets);
+    
+    AppState *appState = (AppState *)srcConnRefCon;
+    MIDIEventPacket *packet = (MIDIEventPacket*)evtlist->packet;
+
+    while(packet && packet->wordCount) {
+      Byte messageType = (packet->words[0] & 0xF0000000) >> 28;
+      if (messageType == 0x02) { // MIDI 1.0 Voice Channel Message
+        // We work with the first word only for MIDI 1.0 Voice Channel Messages
+        Byte status = (Byte)((packet->words[0] & 0x00FF0000) >> 16);
+        NSLog(@"status %x", status);
+        
+        Byte midiCommand = status >> 4; // the command is the 4 left-most bits
+        Byte midiChannel = status & 0x0F; // the channel is the 4 right-most bits
+        NSLog(@"command %d, channel %d", midiCommand, midiChannel);
+        
+        if (midiCommand == NOTE_ON || midiCommand == NOTE_OFF) {
+          Byte note = (Byte)((packet->words[0] & 0x00007F00) >> 8);
+          Byte velocity = (Byte)(packet->words[0] & 0x0000007F);
+
+          NSLog(@"Note: %u, velocity: %u", note, velocity);
+          CheckError(MusicDeviceMIDIEvent(appState->dlsSynthAudioUnit, status, note, velocity, 0),
+                     "Sending event to DLS synth unit");
+        }
+      }
+      packet = MIDIEventPacketNext(packet);
+    }
+  };
   
+  CheckError(MIDIInputPortCreateWithProtocol(client,
+                                             CFSTR("Input Port"),
+                                             kMIDIProtocol_1_0,
+                                             &inPort,
+                                             receiveBlock),
+             "Creating MIDI Input Port");
+    
   ItemCount numberOfSources = 0;
   
   ListMIDISources(&numberOfSources);
   
   ItemCount sourceIndex = AskUserWhichMIDISource(numberOfSources);
     
-  ConnectToMIDISource(sourceIndex, inPort);
+  ConnectToMIDISource(appState, sourceIndex, inPort);
 }
 
 int main(int argc, const char * argv[]) {
